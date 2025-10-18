@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ignitis – nepriklausomo tiekėjo elektros kelias ⚡</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(180deg, #fffbea, #e0f7fa);
+      color: #023047;
+      margin: 0;
+      text-align: center;
+    }
+    h1 { color: #0077b6; margin-top: 20px; }
+
+    /* --- SVG kelias --- */
+    #roadmap { width: 100%; max-width: 1200px; height: 450px; margin: 30px auto; position: relative; }
+    svg { width: 100%; height: 100%; overflow: visible; }
+    #pathBackground { stroke: #ccc; stroke-width: 10; fill: none; stroke-linecap: round; }
+    #pathActive { stroke: #ffd166; stroke-width: 10; fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke-dashoffset 1s ease; }
+
+    /* NEBEBUS transform animacijų */
+    .stage {
+      cursor: pointer;
+      transition: filter 0.15s ease;
+    }
+    .stage:hover {
+      filter: brightness(1.12);
+    }
+
+    .icon { font-size: 34px; text-anchor: middle; dominant-baseline: middle; }
+    .icon-label { font-size: 14px; text-anchor: middle; fill: #023047; font-weight: 600; }
+    .cost-label { font-size: 12px; text-anchor: middle; fill: #0077b6; font-weight: 600; transform: translateY(55px); }
+
+    /* --- Valdikliai --- */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 15px;
+    }
+    select, input { border-radius: 8px; padding: 6px 10px; }
+    .total { font-weight: 700; color: #0077b6; margin: 12px 0; }
+
+    /* --- Skaičiuoklės boxas --- */
+    .calc-box {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 8px; border-bottom: 1px dashed #eee; text-align: left; }
+    th { background: #caf0f8; color: #023047; }
+    .total-row td { font-weight: 700; color: #0077b6; }
+    canvas#chart { max-height: 240px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>⚡ Nepriklausomo tiekėjo elektros kelias ⚡</h1>
+
+  <div id="roadmap">
+    <svg viewBox="0 0 1200 400">
+  <path id="pathBackground" d="M 80 330 C 200 150, 400 150, 1060 230" />
+  <path id="pathActive" d="M 80 330 C 200 150, 400 150, 1060 230" />
+
+  <g class="stage" data-step="1" transform="translate(80,330)">
+    <text class="icon">🏭</text>
+    <text class="icon-label" y="38">Gamyba</text>
+    <text class="cost-label" y="40" id="cost1">–</text>
+  </g>
+
+  <g class="stage" data-step="2" transform="translate(280,220)">
+    <text class="icon">📈</text>
+    <text class="icon-label" y="38">Rinka</text>
+    <text class="cost-label" y="40" id="cost2">–</text>
+  </g>
+
+  <g class="stage" data-step="3" transform="translate(480,210)">
+    <text class="icon">🔌</text>
+    <text class="icon-label" y="80">Perdavimas</text>
+    <text class="cost-label" y="40" id="cost3">–</text>
+  </g>
+
+  <g class="stage" data-step="4" transform="translate(700,190)">
+    <text class="icon">🛣️</text>
+    <text class="icon-label" y="38">Skirstymas</text>
+    <text class="cost-label" y="40" id="cost4">–</text>
+  </g>
+
+  <g class="stage" data-step="5" transform="translate(900,230)">
+    <text class="icon">⚖️</text>
+    <text class="icon-label" y="38">Balansavimas</text>
+    <text class="cost-label" y="40" id="cost5">–</text>
+  </g>
+
+  <g class="stage" data-step="6" transform="translate(1060,230)">
+    <text class="icon">🏠</text>
+    <text class="icon-label" y="38">Namai</text>
+    <text class="cost-label" y="40" id="cost6">–</text>
+  </g>
+</svg>
+  </div>
+
+	<div class="info-box">
+	  <h2>🏙️ Vilniaus elektros vartojimo apžvalga</h2>
+	    <p>⚡ Vidutinis butas: apie <strong>1700–2000 kWh per metus</strong></p>
+	    <p>🏡 Namai su elektriniu šildymu: iki <strong>10 000 kWh</strong></p>
+	    <p>💶 Vidutinės išlaidos: apie <strong>300–600 € per metus</strong></p>
+	    <p>🌿 Žalios energijos dalis: <strong>~37 %</strong></p>
+	  <p class="small">
+	    Tai rodo, kad dauguma vilniečių jau yra ekonomiški vartotojai.
+	    Didžiausią įtaką kainai turi pasirinktas planas ir paros laikas.
+	  </p>
+	</div>
+<div class="info-box">
+  <h2>👣 Kaip pereiti prie nepriklausomo tiekėjo</h2>
+    <p>Peržiūrėkite pasiūlymus iš kelių tiekėjų.</p>
+    <p>Pasirinkite planą pagal savo suvartojimą (žr. skaičiuoklę).</p>
+    <p>Sudarykite sutartį internetu ar telefonu – jokių techninių darbų nereikia.</p>
+    <p>Gausite sąskaitą jau iš naujojo tiekėjo, tačiau elektra bus ta pati.</p>
+  <p class="small">Jei nieko nedarysite – elektra liks tiekiama visuomeniniu tarifu (brangesniu).</p>
+</div>
+  <div class="calc-box">
+    <h3>🔢 Kainos skaičiuoklė</h3>
+
+    <div class="controls">
+      <label>Tiekėjas:</label>
+      <select id="supplierSelect">
+        <option value="ignitis">Ignitis</option>
+        <option value="enefit">Enefit</option>
+        <option value="elektrum">Elektrum</option>
+        <option value="perlas">Perlas Energija</option>
+      </select>
+
+      <label>Planas:</label>
+      <select id="planSelect">
+        <option value="fiksuotas">Fiksuotas</option>
+        <option value="rinkos">Kintamas (biržos)</option>
+      </select>
+
+      <label>Kiekis (kWh):</label>
+      <input id="kwhRange" type="range" min="1" max="1000" value="100" step="1"/>
+      <span id="kwhLabel">100</span> kWh
+    </div>
+
+    <p class="total">Bendra kaina: <span id="totalCost">0.00 €</span></p>
+
+    <table>
+      <thead><tr><th>Etapas / komponentas</th><th>Kaina (EUR)</th></tr></thead>
+      <tbody id="costTable"></tbody>
+      <tfoot><tr class="total-row"><td>Iš viso (su PVM)</td><td id="sumTotal">– €</td></tr></tfoot>
+    </table>
+
+    <canvas id="chart"></canvas>
+  </div>
+
+  <script>
+  const path = document.getElementById("pathActive");
+  const totalLength = path.getTotalLength();
+  path.style.strokeDasharray = totalLength;
+  path.style.strokeDashoffset = totalLength;
+
+  const stages = document.querySelectorAll(".stage");
+
+  // ❗ Tikslūs X koordinačių taškai pagal kiekvienos ikonos translate(X, Y)
+  const stagePositions = [80, 280, 480, 700, 900, 1060];
+
+  // ⬇️ Ši funkcija randa pozicijos ilgį pagal X padėtį ties keliu
+  function animatePathToX(xTarget, step) {
+  // 🔹 Jei tai paskutinis žingsnis – rodyk visą kelią
+  if (step === stagePositions.length) {
+    path.style.strokeDashoffset = 0;
+    return;
+  }
+
+  // Priešingu atveju – ieškomo taško ilgis (naudojant X koordinatę)
+  let found = 0;
+  for (let i = 0; i <= totalLength; i += 5) {
+    const point = path.getPointAtLength(i);
+    if (point.x >= xTarget) {
+      found = i;
+      break;
+    }
+  }
+
+  const percent = found / totalLength;
+  const offset = totalLength * (1 - percent);
+  path.style.strokeDashoffset = offset;
+
+  stages.forEach(stage => {
+  stage.addEventListener("click", () => {
+    const step = parseInt(stage.dataset.step);
+    animatePathToX(stagePositions[step - 1], step);
+  });
+});
+
+
+}
+
+  // --- Reaguoja į ikonų spustelėjimą ---
+  stages.forEach(stage => {
+    stage.addEventListener("click", () => {
+      const step = parseInt(stage.dataset.step);
+      animatePathToX(stagePositions[step - 1]);
+    });
+  });
+
+  // --- Kainų skaičiuoklė ---
+  const supplierSelect = document.getElementById("supplierSelect");
+  const planSelect = document.getElementById("planSelect");
+  const kwhRange = document.getElementById("kwhRange");
+  const kwhLabel = document.getElementById("kwhLabel");
+  const costTable = document.getElementById("costTable");
+  const sumTotal = document.getElementById("sumTotal");
+  const totalCost = document.getElementById("totalCost");
+  const VAT = 0.21;
+
+  const regulated = { transmission: 0.0011, distribution: 0.0315, balancing: 0.0121, metering: 0.0024 };
+  const supplierRates = {
+    ignitis: { fiksuotas: 0.175, rinkos: 0.160 },
+    enefit: { fiksuotas: 0.179, rinkos: 0.164 },
+    elektrum: { fiksuotas: 0.181, rinkos: 0.167 },
+    perlas: { fiksuotas: 0.172, rinkos: 0.159 }
+  };
+
+  function updateCosts() {
+    const supplier = supplierSelect.value;
+    const plan = planSelect.value;
+    const rate = supplierRates[supplier][plan];
+    const kwh = +kwhRange.value;
+    kwhLabel.textContent = kwh;
+
+    const regulatedSum = Object.values(regulated).reduce((a, b) => a + b, 0);
+    const energyPart = Math.max(0, rate - regulatedSum);
+    const gen = energyPart * 0.7,
+      supp = energyPart * 0.3;
+
+    const rows = [
+      { key: "Energijos gamyba", val: gen * kwh },
+      { key: "Perdavimas", val: regulated.transmission * kwh },
+      { key: "Skirstymas", val: regulated.distribution * kwh },
+      { key: "Balansavimas", val: regulated.balancing * kwh },
+      { key: "Tiekėjo paslaugos", val: supp * kwh },
+      { key: "Skaitikliai / duomenys", val: regulated.metering * kwh }
+    ];
+
+    const net = rows.reduce((a, b) => a + b.val, 0);
+    const vat = net * VAT;
+    const total = net + vat;
+
+    costTable.innerHTML =
+      rows
+        .map(r => `<tr><td>${r.key}</td><td>${r.val.toFixed(4)} €</td></tr>`)
+        .join("") + `<tr><td>PVM (21%)</td><td>${vat.toFixed(4)} €</td></tr>`;
+    sumTotal.textContent = total.toFixed(4) + " €";
+    totalCost.textContent = total.toFixed(2) + " €";
+    drawChart(rows.concat([{ label: "PVM", value: vat }]));
+    updateStageLabels(rate, kwh);
+  }
+
+  function updateStageLabels(rate, kwh) {
+    const total = rate * kwh;
+    const fractions = [0.35, 0.1, 0.15, 0.2, 0.1, 0.1];
+    let running = 0;
+    fractions.forEach((f, i) => {
+      running += f * total;
+      const el = document.getElementById(`cost${i + 1}`);
+      if (el) el.textContent = running.toFixed(2) + " €";
+    });
+  }
+
+  function drawChart(items) {
+    const ctx = document.getElementById("chart");
+    const labels = items.map(i => i.label || i.key);
+    const dataVals = items.map(i => +i.value || +i.val);
+    const colors = ["#90be6d","#ffd166","#06d6a0","#118ab2","#3a86ff","#8ecae6","#f3722c"];
+    if (window.chartInst) window.chartInst.destroy();
+    window.chartInst = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [{ data: dataVals, backgroundColor: colors.slice(0, dataVals.length) }]
+      },
+      options: { plugins: { legend: { position: "bottom" } } }
+    });
+  }
+
+  supplierSelect.addEventListener("change", updateCosts);
+  planSelect.addEventListener("change", updateCosts);
+  kwhRange.addEventListener("input", updateCosts);
+  updateCosts();
+</script>
+</body>
+</html>

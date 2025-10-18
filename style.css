@@ -1,0 +1,145 @@
+:root {
+  --blue: #0077b6;
+  --green: #06d6a0;
+  --yellow: #ffd166;
+  --red: #ff6b6b;
+  --aqua: #8ecae6;
+  --dark: #023047;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(180deg, #fff8e1, #e0f7fa);
+  color: var(--dark);
+  text-align: center;
+}
+
+h1 {
+  margin-top: 20px;
+  color: var(--blue);
+}
+
+#roadmap {
+  position: relative;
+  width: 100%;
+  max-width: 950px;
+  height: 320px;
+  margin: 25px auto;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+}
+
+.stage circle {
+  cursor: pointer;
+  transition: transform 0.3s, filter 0.3s;
+}
+.stage:hover circle {
+  transform: scale(1.25);
+  filter: brightness(1.15);
+}
+
+#bolt {
+  position: absolute;
+  font-size: 38px;
+  transition: top 0.8s ease, left 0.8s ease;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+#tooltip {
+  position: absolute;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  width: 240px;
+  text-align: center;
+  z-index: 20;
+}
+
+#tooltip.show {
+  opacity: 1;
+}
+
+#tooltip strong {
+  color: var(--blue);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.bottom {
+  width: 100%;
+  max-width: 1000px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  align-items: center;
+}
+
+input[type='range'] {
+  width: 260px;
+}
+
+select,
+button {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+button {
+  background: var(--blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #023e8a;
+  transform: scale(1.03);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 18px;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px dashed #ccc;
+}
+
+th {
+  background: #caf0f8;
+}
+
+.total td {
+  font-weight: bold;
+  color: var(--blue);
+}
+
+canvas#chart {
+  max-height: 180px !important;
+  margin-top: 25px;
+}

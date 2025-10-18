@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>⚡ Nuo šaltinio iki rozetės – Elektros kelias ⚡</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --blue: #0077b6;
+        --green: #06d6a0;
+        --yellow: #ffd166;
+        --red: #ff6b6b;
+        --aqua: #8ecae6;
+        --dark: #023047;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(180deg, #fff8e1, #e0f7fa);
+        color: var(--dark);
+        text-align: center;
+      }
+
+      h1 {
+        margin-top: 20px;
+        color: var(--blue);
+      }
+
+      #roadmap {
+        position: relative;
+        width: 100%;
+        max-width: 950px;
+        height: 320px;
+        margin: 25px auto;
+      }
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .stage circle {
+        cursor: pointer;
+        transition: transform 0.3s, filter 0.3s;
+      }
+      .stage:hover circle {
+        transform: scale(1.25);
+        filter: brightness(1.15);
+      }
+
+      #bolt {
+        position: absolute;
+        font-size: 38px;
+        transition: top 0.8s ease, left 0.8s ease;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      #tooltip {
+        position: absolute;
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        width: 240px;
+        text-align: center;
+        z-index: 20;
+      }
+
+      #tooltip.show {
+        opacity: 1;
+      }
+
+      #tooltip strong {
+        color: var(--blue);
+        display: block;
+        margin-bottom: 3px;
+      }
+
+      .bottom {
+        width: 100%;
+        max-width: 1000px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        align-items: center;
+      }
+
+      input[type='range'] {
+        width: 260px;
+      }
+
+      select,
+      button {
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: 600;
+      }
+
+      button {
+        background: var(--blue);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      button:hover {
+        background: #023e8a;
+        transform: scale(1.03);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px dashed #ccc;
+      }
+
+      th {
+        background: #caf0f8;
+      }
+
+      .total td {
+        font-weight: bold;
+        color: var(--blue);
+      }
+
+      canvas#chart {
+        max-height: 180px !important;
+        margin-top: 25px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>⚡ Nuo šaltinio iki rozetės ⚡</h1>
+    <p>Spustelk ant žingsnio, kad sužinotum, kas sudaro tavo elektros kainą.</p>
+
+    <div id="roadmap">
+      <svg viewBox="0 0 950 300">
+        <!-- Linija bus sugeneruota automatiškai -->
+        <path id="dynamicPath" stroke="#0077b6" stroke-width="4" fill="none" />
+        <g class="stage" data-name="Energijos šaltinis" data-desc="Vėjo, saulės, vandens, biokuro arba dujinės elektrinės." transform="translate(50,260)">
+          <circle r="18" fill="#90be6d"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#fff">1</text>
+        </g>
+        <g class="stage" data-name="Rinka / pirkimas" data-desc="Energijos įsigijimas biržoje, tiekėjo pirkimo sąnaudos." transform="translate(180,160)">
+          <circle r="18" fill="#ff6b6b"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#fff">2</text>
+        </g>
+        <g class="stage" data-name="Perdavimo tinklas" data-desc="Aukštos įtampos perdavimo linijos – nuo elektrinių iki regionų." transform="translate(350,280)">
+          <circle r="18" fill="#ffd166"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#000">3</text>
+        </g>
+        <g class="stage" data-name="Skirstymo tinklas" data-desc="Vidutinės ir žemos įtampos tinklai tiekia elektrą iki gatvių ir namų." transform="translate(520,160)">
+          <circle r="18" fill="#06d6a0"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#fff">4</text>
+        </g>
+        <g class="stage" data-name="Balansavimas" data-desc="Paklausos ir gamybos balansavimas, kad sistema išliktų stabili." transform="translate(700,210)">
+          <circle r="18" fill="#118ab2"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#fff">5</text>
+        </g>
+        <g class="stage" data-name="Tiekėjo paslaugos" data-desc="Sąskaitų administravimas, klientų aptarnavimas, IT sistemos." transform="translate(820,190)">
+          <circle r="18" fill="#3a86ff"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#fff">6</text>
+        </g>
+        <g class="stage" data-name="Tavo namai" data-desc="Elektra atkeliauja į rozetę – tavo kasdienybės energija." transform="translate(900,190)">
+          <circle r="18" fill="#8ecae6"></circle>
+          <text y="5" text-anchor="middle" font-size="10" fill="#000">7</text>
+        </g>
+      </svg>
+
+      <div id="bolt">⚡</div>
+      <div id="tooltip"></div>
+    </div>
+
+    <div class="bottom">
+      <h3>Pasirink sunaudotą kiekį (kWh) ir planą</h3>
+      <div class="controls">
+        <label><strong>Kiekis:</strong></label>
+        <input id="kwhRange" type="range" min="1" max="200" step="1" value="10" />
+        <span><strong id="kwhLabel">10</strong> kWh</span>
+        <label><strong>Planas:</strong></label>
+        <select id="planSelect">
+          <option value="0.205">Standartinis (0.205 €/kWh su PVM)</option>
+          <option value="0.189">Namai (0.189 €/kWh su PVM)</option>
+          <option value="0.215">Žaliasis (0.215 €/kWh su PVM)</option>
+        </select>
+        <button id="playJourney">▶ Paleisti kelionę</button>
+      </div>
+
+      <table>
+        <thead><tr><th>Etapas</th><th>Kaina (EUR)</th></tr></thead>
+        <tbody id="costTable"></tbody>
+        <tfoot><tr class="total"><td>Iš viso (su PVM)</td><td id="totalCost">0.000 €</td></tr></tfoot>
+      </table>
+
+      <canvas id="chart"></canvas>
+    </div>
+
+    <script>
+      window.onload = function () {
+        const bolt = document.getElementById('bolt');
+        const tooltip = document.getElementById('tooltip');
+        const stages = document.querySelectorAll('.stage');
+        const pathEl = document.getElementById('dynamicPath');
+
+        // ========== Nauja: automatinis kelio generavimas ==========
+        function generatePathFromStages() {
+          const coords = Array.from(stages).map((s) => {
+            const t = s.getAttribute('transform');
+            const match = /translate\(([^,]+),([^)]+)\)/.exec(t);
+            return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+          });
+
+          let d = `M${coords[0].x},${coords[0].y}`;
+          for (let i = 1; i < coords.length; i++) {
+            const midX = (coords[i - 1].x + coords[i].x) / 2;
+            const midY = (coords[i - 1].y + coords[i].y) / 2;
+            d += ` Q${midX},${midY} ${coords[i].x},${coords[i].y}`;
+          }
+          pathEl.setAttribute('d', d);
+        }
+
+        generatePathFromStages();
+
+        // ========== Elektra: rožė ir tooltip ==========
+        moveBoltTo(stages[0]);
+
+        stages.forEach((stage) =>
+          stage.addEventListener('click', () => {
+            moveBoltTo(stage);
+            showTooltip(stage);
+          })
+        );
+
+        function moveBoltTo(stage) {
+          const t = stage.getAttribute('transform');
+          const m = /translate\(([^,]+),([^)]+)\)/.exec(t);
+          if (!m) return;
+          const x = parseFloat(m[1]);
+          const y = parseFloat(m[2]);
+          bolt.style.left = `${x}px`;
+          bolt.style.top = `${y}px`;
+        }
+
+        function showTooltip(stage) {
+          const t = stage.getAttribute('transform');
+          const m = /translate\(([^,]+),([^)]+)\)/.exec(t);
+          if (!m) return;
+          const x = parseFloat(m[1]);
+          const y = parseFloat(m[2]);
+          tooltip.innerHTML = `<strong>${stage.dataset.name}</strong>${stage.dataset.desc}`;
+          tooltip.style.left = `${x}px`;
+          tooltip.style.top = `${y - 25}px`;
+          tooltip.classList.add('show');
+          clearTimeout(window.ttHide);
+          window.ttHide = setTimeout(() => tooltip.classList.remove('show'), 4500);
+        }
+
+        // ========== Kainų skaičiavimas ==========
+        const VAT = 0.21;
+        const regulated = { transmission: 0.0009, distribution: 0.026, balancing: 0.01, metering: 0.002 };
+        const kwhRange = document.getElementById('kwhRange');
+        const kwhLabel = document.getElementById('kwhLabel');
+        const planSelect = document.getElementById('planSelect');
+        const costTable = document.getElementById('costTable');
+        const totalCost = document.getElementById('totalCost');
+
+        kwhRange.addEventListener('input', updateCosts);
+        planSelect.addEventListener('change', updateCosts);
+        document.getElementById('playJourney').addEventListener('click', () => {
+          stages.forEach((s, i) =>
+            setTimeout(() => {
+              moveBoltTo(s);
+              showTooltip(s);
+            }, i * 800)
+          );
+        });
+
+        function updateCosts() {
+          const kwh = parseFloat(kwhRange.value);
+          kwhLabel.textContent = kwh;
+          const retailWithVAT = parseFloat(planSelect.value);
+          const retailNet = retailWithVAT / (1 + VAT);
+          const regulatedSum =
+            regulated.transmission + regulated.distribution + regulated.balancing + regulated.metering;
+          let supplierPart = retailNet - regulatedSum;
+          if (supplierPart < 0) supplierPart = 0;
+          const supplierShare = supplierPart * 0.3;
+          const generationShare = supplierPart * 0.7;
+
+          const mapping = [
+            { key: 'Energijos šaltinis / gamyba', val: generationShare },
+            { key: 'Perdavimo tinklas', val: regulated.transmission },
+            { key: 'Skirstymo tinklas', val: regulated.distribution },
+            { key: 'Balansavimas', val: regulated.balancing },
+            { key: 'Tiekėjo paslaugos', val: supplierShare },
+            { key: 'Skaitikliai ir duomenys', val: regulated.metering },
+          ];
+
+          costTable.innerHTML = '';
+          let sumNet = 0;
+          mapping.forEach((m) => (sumNet += m.val * kwh));
+          const vat = sumNet * VAT;
+          const total = sumNet + vat;
+
+          mapping.forEach((m) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${m.key}</td><td>${(m.val * kwh).toFixed(4)} €</td>`;
+            costTable.appendChild(tr);
+          });
+          const vatRow = document.createElement('tr');
+          vatRow.innerHTML = `<td>PVM (21%)</td><td>${vat.toFixed(4)} €</td>`;
+          costTable.appendChild(vatRow);
+          totalCost.textContent = total.toFixed(4) + ' €';
+
+          drawChart(mapping, kwh, vat);
+        }
+
+        function drawChart(mapping, kwh, vat) {
+          const ctx = document.getElementById('chart');
+          const labels = mapping.map((m) => m.key).concat(['PVM']);
+          const data = mapping.map((m) => m.val * kwh).concat([vat]);
+          const colors = ['#90be6d', '#ffd166', '#06d6a0', '#118ab2', '#3a86ff', '#8ecae6', '#f3722c'];
+          if (window.costChart) window.costChart.destroy();
+          window.costChart = new Chart(ctx, {
+            type: 'pie',
+            data: { labels, datasets: [{ data, backgroundColor: colors }] },
+            options: { plugins: { legend: { position: 'bottom' } }, responsive: true },
+          });
+        }
+
+        updateCosts();
+      };
+    </script>
+  </body>
+</html>

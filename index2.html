@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>⚡ Ignitis – Elektros kelias nuo šaltinio iki rozetės ⚡</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --blue: #0077b6;
+      --green: #06d6a0;
+      --yellow: #ffd166;
+      --dark: #023047;
+    }
+    body {
+      font-family: "Poppins", sans-serif;
+      margin:0;
+      background:linear-gradient(180deg,#fffbea,#e0f7fa);
+      color:var(--dark);
+      text-align:center;
+    }
+    h1 { color:var(--blue); margin:20px 0;}
+    p { margin:0 0 12px;}
+    /* ROADMAP */
+    #roadmap {
+      width:100%;
+      max-width:1200px;
+      height:450px;
+      margin:30px auto;
+      position:relative;
+    }
+    svg {
+      width:100%;
+      height:100%;
+      overflow:visible;
+    }
+    #pathBackground {
+      stroke:#ccc;
+      stroke-width:10;
+      fill:none;
+      stroke-linecap:round;
+    }
+    #pathActive {
+      stroke:var(--yellow);
+      stroke-width:10;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      transition: stroke-dashoffset 0.8s ease;
+    }
+    .stage {
+      cursor:pointer;
+      /* užfiksuota pozicija, kad piktogramos neslinktų */
+    }
+    .icon {
+      font-size:34px;
+      text-anchor:middle;
+    }
+    .icon-label {
+      font-size:14px;
+      text-anchor:middle;
+      fill:var(--dark);
+      font-weight:600;
+    }
+    .cost-label {
+      font-size:12px;
+      text-anchor:middle;
+      fill:var(--blue);
+      font-weight:600;
+      transform: translateY(55px);
+    }
+    /* CONTROLS & TABLE */
+    .bottom {
+      width:100%;
+      max-width:1200px;
+      margin:20px auto;
+      background:#fff;
+      border-radius:16px;
+      padding:20px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    }
+    .controls {
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:12px;
+    }
+    input[type="range"] { width:220px; }
+    select, input[type="range"], .mini {
+      border-radius:8px;
+      padding:8px 10px;
+      font-weight:600;
+      border:1px solid rgba(0,0,0,0.06);
+    }
+    .small { font-size:13px; color:#444; }
+    table { width:100%; border-collapse:collapse; margin-top:14px; }
+    th, td { padding:8px; text-align:left; border-bottom:1px dashed #e6eef2; }
+    th { background:#caf0f8; color:var(--dark); }
+    .total td { font-weight:800; color:var(--blue); }
+    canvas#chart { max-height:220px; margin-top:16px; }
+    @media (max-width:900px) {
+      #roadmap { height:520px; }
+      .icon { font-size:30px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ Nuo šaltinio iki tavo namų ⚡</h1>
+  <p>Pasirink planą, kiekį ir spustelk ant etapo — pamatysi, kaip elektra „keliauja“ ir kiek kainuoja iki tų namų.</p>
+
+  <div id="roadmap">
+    <svg viewBox="0 0 1200 400">
+      <path id="pathBackground" d="M 80 330 C 200 150, 400 150, 1060 230"/>
+      <path id="pathActive" d="M 80 330 C 200 150, 400 150, 1060 230"/>
+
+      <g class="stage" data-step="1" transform="translate(82,337)">
+        <text class="icon">🌬️</text>
+        <text class="icon-label" y="40">Gamyba</text>
+        <text class="cost-label" y="60" id="cost1">–</text>
+      </g>
+
+      <g class="stage" data-step="2" transform="translate(265,210)">
+        <text class="icon">📈</text>
+        <text class="icon-label" y="40">Rinka</text>
+        <text class="cost-label" y="60" id="cost2">–</text>
+      </g>
+
+      <g class="stage" data-step="3" transform="translate(458,190)">
+        <text class="icon">🔌</text>
+        <text class="icon-label" y="40">Perdavimas</text>
+        <text class="cost-label" y="60" id="cost3">–</text>
+      </g>
+
+      <g class="stage" data-step="4" transform="translate(665,200)">
+        <text class="icon">🛣️</text>
+        <text class="icon-label" y="40">Skirstymas</text>
+        <text class="cost-label" y="60" id="cost4">–</text>
+      </g>
+
+      <g class="stage" data-step="5" transform="translate(865,220)">
+        <text class="icon">⚖️</text>
+        <text class="icon-label" y="40">Balansavimas</text>
+        <text class="cost-label" y="60" id="cost5">–</text>
+      </g>
+
+      <g class="stage" data-step="6" transform="translate(1060,230)">
+        <text class="icon">🏠</text>
+        <text class="icon-label" y="40">Namai</text>
+        <text class="cost-label" y="60" id="cost6">–</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="bottom">
+    <div class="controls">
+      <label>Kiekis (kWh):</label>
+      <input id="kwhRange" type="range" min="1" max="1000" step="1" value="100"/>
+      <span class="small"><strong id="kwhLabel">100</strong> kWh</span>
+
+      <label>Planas:</label>
+      <select id="planSelect" class="mini">
+        <option value="0.231">Minimalus – 0,231 €/kWh</option>
+        <option value="0.205">Optimalus – 0,205 €/kWh</option>
+        <option value="0.129">Išmanus – Mėnesinis (biržos + 0,129 €/kWh)</option>
+        <option value="0.119">Išmanus – 15 (biržos + 0,119 €/kWh)</option>
+      </select>
+    </div>
+
+    <table>
+      <thead><tr><th>Etapas / elementas</th><th>Kaina (EUR)</th></tr></thead>
+      <tbody id="costTable"></tbody>
+      <tfoot><tr class="total"><td>Iš viso (su PVM)</td><td id="totalCost">0.000 €</td></tr></tfoot>
+    </table>
+
+    <canvas id="chart"></canvas>
+  </div>
+
+  <script>
+    const path = document.getElementById("pathActive");
+    const totalLength = path.getTotalLength();
+    path.style.strokeDasharray = totalLength;
+    path.style.strokeDashoffset = totalLength;
+
+    const stages = document.querySelectorAll(".stage");
+    const kwhInput = document.getElementById("kwhRange");
+    const kwhLabel = document.getElementById("kwhLabel");
+    const planSelect = document.getElementById("planSelect");
+    const totalCostEl = document.getElementById("totalCost");
+    const costTable = document.getElementById("costTable");
+
+    const VAT = 0.21;
+    const parts = [
+      { key: "Energijos gamyba", share: 0.35 },
+      { key: "Rinka", share: 0.10 },
+      { key: "Perdavimo tinklas", share: 0.15 },
+      { key: "Skirstymo tinklas", share: 0.20 },
+      { key: "Balansavimas", share: 0.10 },
+      { key: "Tiekėjo paslaugos", share: 0.10 }
+    ];
+
+    function updateStageCosts(rate, kwh) {
+      let cumulative = 0;
+      const total = rate * kwh;
+      costTable.innerHTML = "";
+      parts.forEach((p, idx) => {
+        const val = p.share * total;
+        cumulative += val;
+        const el = document.getElementById(`cost${idx+1}`);
+        if (el) el.textContent = cumulative.toFixed(2) + " €";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${p.key}</td><td>${val.toFixed(4)} €</td>`;
+        costTable.appendChild(tr);
+      });
+      const vat = total * VAT;
+      const totalWithVat = total + vat;
+      const trVat = document.createElement("tr");
+      trVat.innerHTML = `<td>PVM (21%)</td><td>${vat.toFixed(4)} €</td>`;
+      costTable.appendChild(trVat);
+      totalCostEl.textContent = totalWithVat.toFixed(2) + " €";
+
+      // Draw chart
+      const ctx = document.getElementById("chart");
+      const labels = parts.map(p=>p.key).concat(["PVM"]);
+      const data = parts.map(p=>p.share * total).concat([vat]);
+      if (window.costChart) window.costChart.destroy();
+      window.costChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels,
+          datasets:[{ data, backgroundColor:["#90be6d","#ffd166","#06d6a0","#118ab2","#3a86ff","#8ecae6","#f3722c"] }]
+        },
+        options:{ plugins:{ legend:{ position:"bottom" }}, responsive:true }
+      });
+    }
+
+    function animatePath(step) {
+        const progress = (step - 1) / (stages.length - 1);
+        const offset = totalLength * (1 - progress) - 5; // -5 leidžia nueiti iki pat pabaigos
+        path.style.strokeDashoffset = Math.max(offset, 0);
+    }
+
+    stages.forEach(stage => {
+      stage.addEventListener("click", () => {
+        const step = parseInt(stage.dataset.step);
+        animatePath(step);
+      });
+    });
+
+    function updateAll() {
+      const rate = parseFloat(planSelect.value);
+      const kwh = parseFloat(kwhInput.value);
+      kwhLabel.textContent = kwh;
+      updateStageCosts(rate, kwh);
+    }
+
+    planSelect.addEventListener("change", updateAll);
+    kwhInput.addEventListener("input", updateAll);
+
+    updateAll();
+  </script>
+</body>
+</html>

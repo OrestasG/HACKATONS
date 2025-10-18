@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>⚡ Nuo šaltinio iki rozetės – Elektros kelias ⚡</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --blue: #0077b6;
+        --green: #06d6a0;
+        --yellow: #ffd166;
+        --red: #ff6b6b;
+        --dark: #023047;
+      }
+      * { box-sizing:border-box; }
+      body {
+        margin:0;
+        font-family:'Poppins',sans-serif;
+        background:linear-gradient(180deg,#fff8e1,#e0f7fa);
+        color:var(--dark);
+        text-align:center;
+      }
+      h1 { margin:20px 0; color:var(--blue); }
+      p { margin:0 0 12px; }
+      #roadmap {
+        position:relative;
+        width:100%;
+        max-width:1200px;
+        height:420px;
+        margin:20px auto;
+        padding:10px;
+      }
+      svg { width:100%; height:100%; overflow:visible; }
+      #dynamicPath {
+        stroke:var(--blue);
+        stroke-width:10;
+        fill:none;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+        filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));
+      }
+      .stage {
+        cursor:pointer;
+        transition: transform .28s ease, filter .28s ease;
+      }
+      .stage:hover {
+        transform: translateY(-6px) scale(1.04);
+        filter: brightness(1.08);
+      }
+      .icon {
+        font-size:34px;
+        dominant-baseline:middle;
+        text-anchor:middle;
+        transform: none;
+      }
+      .icon-label {
+        font-size:13px;
+        text-anchor:middle;
+        fill:var(--dark);
+        font-weight:600;
+        transform: none;
+      }
+      #bolt {
+        position:absolute;
+        font-size:46px;
+        transform:translate(-50%,-60%);
+        pointer-events:none;
+        z-index:30;
+        transition:left .45s ease, top .45s ease;
+      }
+      #tooltip {
+        position:absolute;
+        left:50%;
+        transform:translateX(-50%);
+        background:#fff;
+        padding:12px;
+        border-radius:12px;
+        box-shadow:0 8px 24px rgba(0,0,0,0.12);
+        width:260px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .3s ease;
+        z-index:40;
+        text-align:center;
+      }
+      #tooltip.show { opacity:1; }
+      #tooltip strong { display:block; color:var(--blue); margin-bottom:6px; }
+      .bottom {
+        width:100%;
+        max-width:1200px;
+        margin:20px auto;
+        background:#fff;
+        border-radius:16px;
+        padding:20px;
+        box-shadow:0 8px 25px rgba(0,0,0,0.08);
+      }
+      .controls {
+        display:flex;
+        flex-wrap:wrap;
+        gap:12px;
+        align-items:center;
+        justify-content:center;
+      }
+      .controls label { font-weight:700; }
+      input[type="range"] { width:220px; }
+      select, button, .mini {
+        border-radius:8px;
+        padding:8px 10px;
+        font-weight:600;
+        border:1px solid rgba(0,0,0,0.06);
+      }
+      button {
+        background:var(--blue);
+        color:#fff;
+        border:none;
+        cursor:pointer;
+      }
+      .small { font-size:13px; color:#444; }
+      table { width:100%; border-collapse:collapse; margin-top:14px; }
+      th, td { padding:8px; text-align:left; border-bottom:1px dashed #e6eef2; }
+      th { background:#caf0f8; color:var(--dark); }
+      .total td { font-weight:800; color:var(--blue); }
+      canvas#chart { max-height:220px; margin-top:16px; }
+      @media (max-width:900px) {
+        #roadmap { height:520px; }
+        .icon { font-size:30px; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>⚡ Nuo šaltinio iki rozetės ⚡</h1>
+    <p>Spustelk ant piktogramos, kad sužinotum, kas sudaro tavo elektros kainą.</p>
+
+    <div id="roadmap">
+      <svg viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <path id="dynamicPath" d=""></path>
+
+        <g class="stage" data-name="1. Energijos šaltinis" data-desc="Vėjo, saulės, hidra, biokuro ar dujinė kilmė." transform="translate(80,330)">
+          <text class="icon" y="0">🌬️</text>
+          <text class="icon-label" y="42">Gamyba</text>
+        </g>
+
+        <g class="stage" data-name="2. Rinka / pirkimas" data-desc="Energijos pirkimas biržoje – rinkos komponentas." transform="translate(260,170)">
+          <text class="icon" y="0">📈</text>
+          <text class="icon-label" y="42">Rinka</text>
+        </g>
+
+        <g class="stage" data-name="3. Perdavimo tinklas" data-desc="Aukštos įtampos linijos – tarpinis kelias." transform="translate(430,340)">
+          <text class="icon" y="0">🔌</text>
+          <text class="icon-label" y="42">Perd.</text>
+        </g>
+
+        <g class="stage" data-name="4. Skirstymo tinklas" data-desc="Nužemia linija iki tavo gatvės / kiemo." transform="translate(600,160)">
+          <text class="icon" y="0">🛣️</text>
+          <text class="icon-label" y="42">Skirst.</text>
+        </g>
+
+        <g class="stage" data-name="5. Balansavimas" data-desc="Tinklo stabilizacija, rezervai ir balansavimas." transform="translate(760,270)">
+          <text class="icon" y="0">⚖️</text>
+          <text class="icon-label" y="42">Balans.</text>
+        </g>
+
+        <g class="stage" data-name="6. Tiekėjo paslaugos" data-desc="Sąskaitos, IT, aptarnavimas." transform="translate(920,230)">
+          <text class="icon" y="0">🏷️</text>
+          <text class="icon-label" y="42">Tiekėjas</text>
+        </g>
+
+        <g class="stage" data-name="7. Tavo namai" data-desc="Elektra pasiekia rozetę – kasdienis naudojimas." transform="translate(1060,230)">
+          <text class="icon" y="0">🏠</text>
+          <text class="icon-label" y="42">Namai</text>
+        </g>
+      </svg>
+
+      <div id="bolt">⚡</div>
+      <div id="tooltip"></div>
+    </div>
+
+    <div class="bottom">
+      <h3>Pasirink planą, laiko zoną ir kiekį</h3>
+
+      <div class="controls">
+        <label>Kiekis (kWh):</label>
+        <input id="kwhRange" type="range" min="1" max="1000" step="1" value="100" />
+        <span class="small"><strong id="kwhLabel">100</strong> kWh</span>
+
+        <label>Laiko zonos:</label>
+        <select id="tzMode" class="mini">
+          <option value="single">Viena laiko zona</option>
+          <option value="two">Dvi laiko zonos</option>
+        </select>
+
+        <label>Planas:</label>
+        <select id="planSelect" class="mini">
+          <option value="minimalus" data-single="0.231" data-peak="" data-off="">Minimalus</option>
+          <option value="optimalus" data-single="0.221" data-peak="" data-off="">Optimalus</option>
+          <option value="ismanus_menesinis" data-single="" data-peak="" data-off="">Išmanus – Mėnesinis</option>
+          <option value="ismanus_15" data-single="" data-peak="" data-off="">Išmanus – 15</option>
+        </select>
+
+        <div id="twoZoneControls" style="display:none; align-items:center;">
+          <label>Ne piko dalis (%):</label>
+          <input id="offshare" type="range" min="0" max="100" step="1" value="40" />
+          <span class="small"><strong id="offLabel">40</strong>%</span>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>Etapas / elementas</th><th>Kaina (EUR)</th></tr></thead>
+        <tbody id="costTable"></tbody>
+        <tfoot><tr class="total"><td>Iš viso (su PVM)</td><td id="totalCost">0.000 €</td></tr></tfoot>
+      </table>
+
+      <canvas id="chart"></canvas>
+
+      <p class="small" style="margin-top:12px">
+        Tarifai remiasi „Ignitis“ nepriklausomo tiekimo planais. Fiksuotų planų kaina nurodyta pagal
+        puslapį, o kintamųjų planų („Išmanus – Mėnesinis“, „Išmanus – 15“) kaina skaičiuojama pagal biržos kainą. :contentReference[oaicite:1]{index=1}
+      </p>
+    </div>
+
+    <script>
+      window.addEventListener('load', () => {
+        const bolt = document.getElementById('bolt');
+        const tooltip = document.getElementById('tooltip');
+        const stages = document.querySelectorAll('.stage');
+        const pathEl = document.getElementById('dynamicPath');
+        const kwhRange = document.getElementById('kwhRange');
+        const kwhLabel = document.getElementById('kwhLabel');
+        const planSelect = document.getElementById('planSelect');
+        const tzMode = document.getElementById('tzMode');
+        const twoZoneControls = document.getElementById('twoZoneControls');
+        const offshare = document.getElementById('offshare');
+        const offLabel = document.getElementById('offLabel');
+        const costTable = document.getElementById('costTable');
+        const totalCost = document.getElementById('totalCost');
+
+        const VAT = 0.21;
+        const regulated = { transmission:0.0009, distribution:0.026, balancing:0.01, metering:0.002 };
+
+        function generateSerpentinePath() {
+          const coords = Array.from(stages).map(s => {
+            const t = s.getAttribute('transform');
+            const m = /translate\(([^,]+),([^)]+)\)/.exec(t);
+            return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+          });
+          let d = `M ${coords[0].x} ${coords[0].y}`;
+          for (let i=1; i<coords.length; i++) {
+            const prev = coords[i-1];
+            const cur = coords[i];
+            const cx1 = prev.x + (cur.x - prev.x)*0.35;
+            const cy1 = prev.y + (i % 2 === 0 ? -80 : 80);
+            const cx2 = prev.x + (cur.x - prev.x)*0.65;
+            const cy2 = cur.y + (i % 2 === 0 ? 80 : -80);
+            d += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${cur.x} ${cur.y}`;
+          }
+          pathEl.setAttribute('d', d);
+        }
+        generateSerpentinePath();
+
+        function placeBoltAt(el) {
+          const t = el.getAttribute('transform');
+          const m = /translate\(([^,]+),([^)]+)\)/.exec(t);
+          if (!m) return;
+          const x = parseFloat(m[1]), y = parseFloat(m[2]);
+          const svgRect = document.querySelector('#roadmap svg').getBoundingClientRect();
+          const containerRect = document.getElementById('roadmap').getBoundingClientRect();
+          bolt.style.left = (svgRect.left + x - containerRect.left) + 'px';
+          bolt.style.top = (svgRect.top + y - containerRect.top - 20) + 'px';
+        }
+
+        function showTooltipFor(el) {
+          const name = el.dataset.name;
+          const desc = el.dataset.desc;
+          tooltip.innerHTML = `<strong>${name}</strong><div class="small">${desc}</div>`;
+          const t = el.getAttribute('transform');
+          const m = /translate\(([^,]+),([^)]+)\)/.exec(t);
+          if (!m) return;
+          const x = parseFloat(m[1]), y = parseFloat(m[2]);
+          const svgRect = document.querySelector('#roadmap svg').getBoundingClientRect();
+          const containerRect = document.getElementById('roadmap').getBoundingClientRect();
+          tooltip.style.left = (svgRect.left + x - containerRect.left) + 'px';
+          tooltip.style.top = (svgRect.top + y - containerRect.top - 70) + 'px';
+          tooltip.classList.add('show');
+          clearTimeout(window._ttHide);
+          window._ttHide = setTimeout(()=> tooltip.classList.remove('show'), 4200);
+        }
+
+        stages.forEach(s => {
+          s.addEventListener('click', () => {
+            placeBoltAt(s);
+            showTooltipFor(s);
+          });
+        });
+        placeBoltAt(stages[0]);
+
+        function toggleTZControls() {
+          if (tzMode.value === 'two') {
+            twoZoneControls.style.display = 'flex';
+          } else {
+            twoZoneControls.style.display = 'none';
+          }
+          updateCosts();
+        }
+        tzMode.addEventListener('change', toggleTZControls);
+        kwhRange.addEventListener('input', () => {
+          kwhLabel.textContent = kwhRange.value;
+          updateCosts();
+        });
+        planSelect.addEventListener('change', updateCosts);
+        offshare.addEventListener('input', () => {
+          offLabel.textContent = offshare.value;
+          updateCosts();
+        });
+
+        function updateCosts() {
+          const kwh = Number(kwhRange.value);
+          const planOpt = planSelect.selectedOptions[0];
+          const singleRate = planOpt.dataset.single ? Number(planOpt.dataset.single) : null;
+          const peakRate   = planOpt.dataset.peak ? Number(planOpt.dataset.peak) : null;
+          const offRate    = planOpt.dataset.off ? Number(planOpt.dataset.off) : null;
+
+          costTable.innerHTML = '';
+
+          const regulatedSumUnit = regulated.transmission + regulated.distribution + regulated.balancing + regulated.metering;
+
+          if (tzMode.value === 'single' || !peakRate || !offRate) {
+            if (singleRate === null) {
+              // kintamo plano – nežinoma konkreti kaina
+              const tr1 = document.createElement('tr');
+              tr1.innerHTML = `<td>Planas „${planOpt.value}“ kaina (kintama)</td><td>– € (pagal biržą)</td>`;
+              costTable.appendChild(tr1);
+              totalCost.textContent = '–';
+              return;
+            }
+            let supplierAndGenUnit = Math.max(0, singleRate - regulatedSumUnit);
+            let supplierUnit = supplierAndGenUnit * 0.30;
+            let generationUnit = supplierAndGenUnit * 0.70;
+
+            const rows = [
+              { key:'Energijos šaltinis / gamyba', valUnit:generationUnit },
+              { key:'Perdavimo tinklas',           valUnit:regulated.transmission },
+              { key:'Skirstymo tinklas',           valUnit:regulated.distribution },
+              { key:'Balansavimas',                valUnit:regulated.balancing },
+              { key:'Tiekėjo paslaugos',           valUnit:supplierUnit },
+              { key:'Skaitikliai ir duomenys',     valUnit:regulated.metering }
+            ];
+
+            let sumNet = rows.reduce((acc,r)=> acc + r.valUnit * kwh, 0);
+            const vat = sumNet * VAT;
+            const total = sumNet + vat;
+
+            rows.forEach(r => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${r.key}</td><td>${(r.valUnit * kwh).toFixed(4)} €</td>`;
+              costTable.appendChild(tr);
+            });
+            const vatRow = document.createElement('tr');
+            vatRow.innerHTML = `<td>PVM (21%)</td><td>${vat.toFixed(4)} €</td>`;
+            costTable.appendChild(vatRow);
+
+            totalCost.textContent = total.toFixed(4) + ' €';
+            drawChartSimple(rows.map(r=>({label:r.key, value:r.valUnit * kwh})).concat([{label:'PVM', value:vat}]));
+
+          } else {
+            const offPct = Number(offshare.value)/100;
+            const offKwh = kwh * offPct;
+            const peakKwh = kwh - offKwh;
+            const retailCost = peakRate * peakKwh + offRate * offKwh;
+            const approxUnit = retailCost / kwh;
+            const supplierAndGenUnit = Math.max(0, approxUnit - regulatedSumUnit);
+            const supplierUnit = supplierAndGenUnit * 0.30;
+            const generationUnit = supplierAndGenUnit * 0.70;
+
+            const rows = [
+              { key:'Energijos šaltinis / gamyba (approx)',  val:generationUnit * kwh },
+              { key:'Perdavimo tinklas',                     val:regulated.transmission * kwh },
+              { key:'Skirstymo tinklas',                     val:regulated.distribution * kwh },
+              { key:'Balansavimas',                          val:regulated.balancing * kwh },
+              { key:'Tiekėjo paslaugos (approx)',            val:supplierUnit * kwh },
+              { key:'Skaitikliai ir duomenys',               val:regulated.metering * kwh },
+              { key:`Dvi zonos – Pikas (${peakKwh.toFixed(1)} kWh @ ${peakRate.toFixed(3)}€/kWh)`, val:(peakRate * peakKwh) },
+              { key:`Dvi zonos – Ne pikas (${offKwh.toFixed(1)} kWh @ ${offRate.toFixed(3)}€/kWh)`, val:(offRate * offKwh) }
+            ];
+
+            let sumNet = rows.reduce((acc,r)=> acc + r.val, 0);
+            const vat = sumNet * VAT;
+            const total = sumNet + vat;
+
+            rows.forEach(r=>{
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${r.key}</td><td>${r.val.toFixed(4)} €</td>`;
+              costTable.appendChild(tr);
+            });
+            const vatRow = document.createElement('tr');
+            vatRow.innerHTML = `<td>PVM (21%)</td><td>${vat.toFixed(4)} €</td>`;
+            costTable.appendChild(vatRow);
+
+            totalCost.textContent = total.toFixed(4) + ' €';
+            drawChartSimple(rows.map(r=>({label:r.key, value:r.val})).concat([{label:'PVM', value:vat}]));
+          }
+        }
+
+        function drawChartSimple(items) {
+          const ctx = document.getElementById('chart');
+          const labels = items.map(i=>i.label || i.key);
+          const data   = items.map(i=>Number((i.value || 0).toFixed(4)));
+          const colors = ['#90be6d','#ffd166','#06d6a0','#118ab2','#3a86ff','#8ecae6','#f3722c','#ffb4a2','#bde0fe','#cdb4db','#f8edeb','#d3f8e2'];
+          if (window.costChart) window.costChart.destroy();
+          window.costChart = new Chart(ctx, {
+            type:'pie',
+            data:{labels, datasets:[{data, backgroundColor:colors.slice(0,data.length)}]},
+            options:{plugins:{legend:{position:'bottom'}}, responsive:true}
+          });
+        }
+
+        toggleTZControls();
+        updateCosts();
+
+        window.addEventListener('resize', () => {
+          placeBoltAt(document.querySelector('.stage'));
+          generateSerpentinePath();
+        });
+      });
+    </script>
+  </body>
+</html>
