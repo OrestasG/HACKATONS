@@ -150,6 +150,55 @@
         width: 100%;
       }
     }
+
+    /* --- Modal stiliai --- */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+      text-align: left;
+      position: relative;
+    }
+
+    .popup h2 {
+      color: #0077b6;
+      margin-top: 0;
+    }
+
+    .popup p {
+      font-size: 15px;
+      color: #023047;
+      margin-bottom: 15px;
+    }
+
+    .close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 26px;
+      color: #0077b6;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -160,37 +209,37 @@
       <path id="pathBackground" d="M 80 330 C 200 150, 400 150, 1060 230" />
       <path id="pathActive" d="M 80 330 C 200 150, 400 150, 1060 230" />
 
-      <g class="stage" data-step="1" transform="translate(80,330)" title="Energijos gamyba">
-        <text class="icon" title="Energijos gamyba">🏭</text>
+      <g class="stage" data-step="1" data-info="Čia prasideda elektros kelionė – elektrinės gamina energiją iš įvairių šaltinių (vėjo, saulės, biokuro ar dujų)." data-video="https://www.youtube.com/embed/Ff0uZl5azF4" transform="translate(80,330)">
+        <text class="icon">🏭</text>
         <text class="icon-label" y="38">Gamyba</text>
         <text class="cost-label" y="40" id="cost1">–</text>
       </g>
 
-      <g class="stage" data-step="2" transform="translate(290,197)" title="Elektros pirkimas rinkoje">
+      <g class="stage" data-step="2" data-info="Elektros energija perkama biržoje – jos kaina priklauso nuo paklausos ir pasiūlos." data-video="https://www.youtube.com/embed/ZUZ9PZUm14k" transform="translate(290,197)">
         <text class="icon">📈</text>
         <text class="icon-label" y="38">Rinka</text>
         <text class="cost-label" y="40" id="cost2">–</text>
       </g>
 
-      <g class="stage" data-step="3" transform="translate(485,185)" title="Aukštos įtampos perdavimas">
+      <g class="stage" data-step="3" data-info="Energija perduodama aukštos įtampos tinklais iš gamintojų į regioninius paskirstymo centrus." data-video="https://www.youtube.com/embed/1A5wfd0ZFbE" transform="translate(485,185)">
         <text class="icon">🔌</text>
         <text class="icon-label" y="38">Perdavimas</text>
         <text class="cost-label" y="40" id="cost3">–</text>
       </g>
 
-      <g class="stage" data-step="4" transform="translate(700,195)" title="Skirstomieji tinklai">
+      <g class="stage" data-step="4" data-info="Elektros tinklai paskirsto energiją iki jūsų namų – tai didžiausia infrastruktūros dalis." data-video="https://www.youtube.com/embed/Z8dG0oC6QjY" transform="translate(700,195)">
         <text class="icon">🛣️</text>
         <text class="icon-label" y="38">Skirstymas</text>
         <text class="cost-label" y="40" id="cost4">–</text>
       </g>
 
-      <g class="stage" data-step="5" transform="translate(910,215)" title="Balansavimas">
+      <g class="stage" data-step="5" data-info="Balansavimo sistema užtikrina, kad visada būtų tiek elektros, kiek jos reikia – nei per daug, nei per mažai." data-video="https://www.youtube.com/embed/9xB0-YgD5oU" transform="translate(910,215)">
         <text class="icon">⚖️</text>
         <text class="icon-label" y="38">Balansavimas</text>
         <text class="cost-label" y="40" id="cost5">–</text>
       </g>
 
-      <g class="stage" data-step="6" transform="translate(1060,230)" title="Elektra jūsų namuose">
+      <g class="stage" data-step="6" data-info="Galiausiai elektra pasiekia jūsų namus – ją naudojate apšvietimui, buitinei technikai ir visiems kasdieniams poreikiams." data-video="https://www.youtube.com/embed/m-0xR7u9vVA" transform="translate(1060,230)">
         <text class="icon">🏠</text>
         <text class="icon-label" y="38">Namai</text>
         <text class="cost-label" y="40" id="cost6">–</text>
@@ -198,7 +247,19 @@
     </svg>
   </div>
 
-  	<div class="info-box">
+  <!-- 🔹 Modal langas -->
+  <div id="popupOverlay" class="overlay">
+    <div class="popup">
+      <span class="close">&times;</span>
+      <h2 id="popupTitle"></h2>
+      <p id="popupText"></p>
+      <div id="popupVideoContainer">
+        <iframe id="popupVideo" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box">
 	  <h2>🏙️ Vilniaus elektros vartojimo apžvalga</h2>
 	    <p>⚡ Vidutinis butas: apie <strong>1700–2000 kWh per metus</strong></p>
 	    <p>🏡 Namai su elektriniu šildymu: iki <strong>10 000 kWh</strong></p>
@@ -209,18 +270,18 @@
 	    Didžiausią įtaką kainai turi pasirinktas planas ir paros laikas.
 	  </p>
 	</div>
-    <div class="info-box">
+
+  <div class="info-box">
       <h2>👣 Kaip pereiti prie nepriklausomo tiekėjo</h2>
         <p>Peržiūrėkite pasiūlymus iš kelių tiekėjų.</p>
         <p>Pasirinkite planą pagal savo suvartojimą (žr. skaičiuoklę).</p>
         <p>Sudarykite sutartį internetu ar telefonu – jokių techninių darbų nereikia.</p>
         <p>Gausite sąskaitą jau iš naujojo tiekėjo, tačiau elektra bus ta pati.</p>
       <p class="small">Jei nieko nedarysite – elektra liks tiekiama visuomeniniu tarifu (brangesniu).</p>
-    </div>
+  </div>
   
   <div class="calc-box">
     <h3>🔢 Kainos skaičiuoklė</h3>
-
     <div class="controls">
       <label>Tiekėjas:</label>
       <select id="supplierSelect">
@@ -228,30 +289,23 @@
         <option value="enefit">Enefit</option>
         <option value="elektrum">Elektrum</option>
       </select>
-
       <label>Planas:</label>
       <select id="planSelect">
         <option value="fiksuotas">Fiksuotas</option>
         <option value="rinkos">Kintamas (biržos)</option>
       </select>
-
       <label>Kiekis (kWh):</label>
       <input id="kwhRange" type="range" min="1" max="1000" value="100" step="1" />
       <input id="kwhInput" type="number" min="1" max="1000" value="100" step="1" style="width:80px" /> kWh
     </div>
-
     <p class="total">Bendra kaina: <span id="totalCost">0.00 €</span></p>
-
     <table>
       <thead><tr><th>Etapas / komponentas</th><th>Kaina (EUR)</th></tr></thead>
       <tbody id="costTable"></tbody>
       <tfoot><tr class="total-row"><td>Iš viso (su PVM)</td><td id="sumTotal">– €</td></tr></tfoot>
     </table>
-
     <canvas id="chart"></canvas>
-
     <p id="recommendation" style="font-weight:700; color:#0077b6; margin-top:15px;"></p>
-
   </div>
 
   <script>
@@ -259,7 +313,6 @@
     const totalLength = path.getTotalLength();
     path.style.strokeDasharray = totalLength;
     path.style.strokeDashoffset = totalLength;
-
     const stages = document.querySelectorAll(".stage");
     const stagePositions = [80, 280, 480, 700, 900, 1060];
 
@@ -268,7 +321,6 @@
         path.style.strokeDashoffset = 0;
         return;
       }
-
       let found = 0;
       for (let i = 0; i <= totalLength; i += 5) {
         const point = path.getPointAtLength(i);
@@ -277,7 +329,6 @@
           break;
         }
       }
-
       const percent = found / totalLength;
       const offset = totalLength * (1 - percent);
       path.style.strokeDashoffset = offset;
@@ -299,32 +350,19 @@
     const totalCost = document.getElementById("totalCost");
     const VAT = 0.21;
 
-    const regulated = {
-      transmission: 0.0011,
-      distribution: 0.0315,
-      balancing: 0.0121,
-      metering: 0.0024
-    };
-
-    const supplierRates = {
-      ignitis: { fiksuotas: 0.175, rinkos: 0.160 },
-      enefit: { fiksuotas: 0.179, rinkos: 0.164 },
-      elektrum: { fiksuotas: 0.181, rinkos: 0.167 },
-    };
+    const regulated = { transmission: 0.0011, distribution: 0.0315, balancing: 0.0121, metering: 0.0024 };
+    const supplierRates = { ignitis: { fiksuotas: 0.175, rinkos: 0.160 }, enefit: { fiksuotas: 0.179, rinkos: 0.164 }, elektrum: { fiksuotas: 0.181, rinkos: 0.167 } };
 
     function updateCosts() {
       const supplier = supplierSelect.value;
       const plan = planSelect.value;
       const rate = supplierRates[supplier][plan];
       const kwh = +kwhRange.value;
-
       kwhInput.value = kwh;
-
       const regulatedSum = Object.values(regulated).reduce((a, b) => a + b, 0);
       const energyPart = Math.max(0, rate - regulatedSum);
       const gen = energyPart * 0.7;
       const supp = energyPart * 0.3;
-
       const rows = [
         { key: "Energijos gamyba", val: gen * kwh },
         { key: "Perdavimas", val: regulated.transmission * kwh },
@@ -333,80 +371,78 @@
         { key: "Tiekėjo paslaugos", val: supp * kwh },
         { key: "Skaitikliai / duomenys", val: regulated.metering * kwh }
       ];
-
       const net = rows.reduce((a, b) => a + b.val, 0);
       const vat = net * VAT;
       const total = net + vat;
-
-      costTable.innerHTML = rows.map(r => `<tr><td>${r.key}</td><td>${r.val.toFixed(4)} €</td></tr>`).join("")
-        + `<tr><td>PVM (21%)</td><td>${vat.toFixed(4)} €</td></tr>`;
-
+      costTable.innerHTML = rows.map(r => `<tr><td>${r.key}</td><td>${r.val.toFixed(4)} €</td></tr>`).join("") + `<tr><td>PVM (21%)</td><td>${vat.toFixed(4)} €</td></tr>`;
       sumTotal.textContent = total.toFixed(4) + " €";
       totalCost.textContent = total.toFixed(2) + " €";
-
       drawChart(rows.concat([{ label: "PVM", value: vat }]));
       updateStageLabels(rate, kwh);
-
-    suggestPlan(kwh);
+      suggestPlan(kwh);
     }
 
     function suggestPlan(kwh) {
-    let text = "";
-    if (kwh < 500) {
-      text = "Pagal Jūsų suvartojimą, labiausiai apsimoka „Ignitis“ – rinkos planas (biržos kaina).";
-    } else if (kwh < 800) {
-      text = "Pagal Jūsų suvartojimą, geriausias pasirinkimas – „Ignitis“ – fiksuotas planas.";
-    } else if (kwh < 1200) {
-      text = "Pagal Jūsų suvartojimą, apsimoka „Enefit“ – kintamas (rinkos) planas.";
-    } else {
-      text = "Pagal Jūsų suvartojimą, geriausias pasirinkimas – „Elektrum“ – fiksuotas planas.";
+      let text = "";
+      if (kwh < 500) text = "Pagal Jūsų suvartojimą, labiausiai apsimoka „Ignitis“ – rinkos planas (biržos kaina).";
+      else if (kwh < 800) text = "Pagal Jūsų suvartojimą, geriausias pasirinkimas – „Ignitis“ – fiksuotas planas.";
+      else if (kwh < 1200) text = "Pagal Jūsų suvartojimą, apsimoka „Enefit“ – kintamas (rinkos) planas.";
+      else text = "Pagal Jūsų suvartojimą, geriausias pasirinkimas – „Elektrum“ – fiksuotas planas.";
+      document.getElementById("recommendation").textContent = text;
     }
 
-    document.getElementById("recommendation").textContent = text;
-  }
-
+    let chart;
+    function drawChart(rows) {
+      const ctx = document.getElementById("chart").getContext("2d");
+      const labels = rows.map(r => r.key || r.label);
+      const data = rows.map(r => r.val || r.value);
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "doughnut",
+        data: { labels, datasets: [{ data }] },
+        options: { plugins: { legend: { position: "bottom" } } }
+      });
+    }
 
     function updateStageLabels(rate, kwh) {
-      const total = rate * kwh;
-      const fractions = [0.35, 0.1, 0.15, 0.2, 0.1, 0.1];
-      let running = 0;
-      fractions.forEach((f, i) => {
-        running += f * total;
-        const el = document.getElementById(`cost${i + 1}`);
-        if (el) el.textContent = running.toFixed(2) + " €";
-      });
+      document.getElementById("cost1").textContent = (rate * 0.7 * kwh).toFixed(2) + " €";
+      document.getElementById("cost2").textContent = (regulated.transmission * kwh).toFixed(2) + " €";
+      document.getElementById("cost3").textContent = (regulated.distribution * kwh).toFixed(2) + " €";
+      document.getElementById("cost4").textContent = (regulated.balancing * kwh).toFixed(2) + " €";
+      document.getElementById("cost5").textContent = (regulated.metering * kwh).toFixed(2) + " €";
+      document.getElementById("cost6").textContent = "–";
     }
 
-    function drawChart(items) {
-      const ctx = document.getElementById("chart");
-      const labels = items.map(i => i.label || i.key);
-      const dataVals = items.map(i => +i.value || +i.val);
-      const colors = ["#90be6d", "#ffd166", "#06d6a0", "#118ab2", "#3a86ff", "#8ecae6", "#f3722c"];
-      if (window.chartInst) window.chartInst.destroy();
-      window.chartInst = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels,
-          datasets: [{ data: dataVals, backgroundColor: colors.slice(0, dataVals.length) }]
-        },
-        options: {
-          plugins: { legend: { position: "bottom" } }
-        }
-      });
-    }
-
-    supplierSelect.addEventListener("change", updateCosts);
-    planSelect.addEventListener("change", updateCosts);
-    kwhRange.addEventListener("input", () => {
-      kwhInput.value = kwhRange.value;
-      updateCosts();
-    });
-    kwhInput.addEventListener("input", () => {
-      kwhRange.value = kwhInput.value;
-      updateCosts();
-    });
-
+    [supplierSelect, planSelect, kwhRange, kwhInput].forEach(el => el.addEventListener("input", updateCosts));
     updateCosts();
+
+    /* --- Modal logika --- */
+    const overlay = document.getElementById("popupOverlay");
+    const popupTitle = document.getElementById("popupTitle");
+    const popupText = document.getElementById("popupText");
+    const popupVideo = document.getElementById("popupVideo");
+    const closeBtn = document.querySelector(".close");
+
+    stages.forEach(stage => {
+      stage.addEventListener("dblclick", () => {
+        popupTitle.textContent = stage.querySelector(".icon-label").textContent;
+        popupText.textContent = stage.dataset.info;
+        popupVideo.src = stage.dataset.video;
+        overlay.style.display = "flex";
+      });
+    });
+
+    closeBtn.onclick = () => {
+      overlay.style.display = "none";
+      popupVideo.src = "";
+    };
+
+    window.onclick = e => {
+      if (e.target === overlay) {
+        overlay.style.display = "none";
+        popupVideo.src = "";
+      }
+    };
   </script>
 </body>
 </html>
